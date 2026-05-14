@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+        <div class="card bg-dark text-light border-secondary shadow">
+            <div class="card-body p-4">
+                <h3 class="fw-bold mb-3">Register Dokumen ke Blockchain</h3>
+
+                <p class="text-secondary">
+                    Upload dokumen untuk dihitung hash SHA-256. File asli tidak disimpan.
+                    Sistem akan membuat blok baru dengan Proof of Work dan tanda tangan digital RSA.
+                </p>
+
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">Pilih Dokumen</label>
+                        <input type="file" name="document" class="form-control" required>
+                        <div class="form-text text-secondary">
+                            Dokumen hanya dibaca sementara untuk menghasilkan hash.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Password Akun</label>
+                        <input type="password" name="signing_password" class="form-control" required>
+                        <div class="form-text text-secondary">
+                            Password digunakan untuk membuka private key terenkripsi dan menandatangani blok.
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        Register ke Blockchain
+                    </button>
+
+                    <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-light">
+                        Kembali
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

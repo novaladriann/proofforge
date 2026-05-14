@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card bg-dark text-light border-secondary shadow">
+            <div class="card-body p-4">
+                <h3 class="mb-3">Register ProofForge</h3>
+                <p class="text-secondary">
+                    Akun akan dibuat bersama RSA key pair. Private key disimpan terenkripsi.
+                </p>
+
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Nama</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Konfirmasi Password</label>
+                        <input type="password" name="confirm_password" class="form-control" required>
+                    </div>
+
+                    <button class="btn btn-primary w-100">Daftar</button>
+                </form>
+
+                <div class="mt-3 text-center">
+                    <a href="{{ url_for('auth.login') }}">Sudah punya akun? Login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+body {
+    background: #07111f;
+    color: #f8f9fa;
+}
+
+a {
+    text-decoration: none;
+}
+
+.card,
+.alert,
+.form-control {
+    border-radius: 14px;
+}
+
+.form-control {
+    background-color: #0f1b2e;
+    border-color: #334155;
+    color: #f8f9fa;
+}
+
+.form-control:focus {
+    background-color: #0f1b2e;
+    color: #f8f9fa;
+    border-color: #0d6efd;
+    box-shadow: none;
+}
+
+.hash-text {
+    word-break: break-all;
+    white-space: normal;
+}
