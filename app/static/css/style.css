@@ -30,3 +30,76 @@ a {
     word-break: break-all;
     white-space: normal;
 }
+
+.hash-box {
+    background: #020617;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.hash-box code {
+    color: #e2e8f0;
+    word-break: break-all;
+}
+
+.hash-box.compact code {
+    font-size: 0.9rem;
+}
+
+.proof-section {
+    margin-bottom: 16px;
+}
+
+.proof-stat-card {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 14px;
+    height: 100%;
+}
+
+.validation-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #334155;
+    padding: 10px 0;
+}
+
+.validation-row:last-child {
+    border-bottom: none;
+}
+
+.chain-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.chain-card {
+    border-radius: 18px;
+}
+
+.chain-connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #94a3b8;
+    margin: 10px 0;
+}
+
+.connector-line {
+    width: 2px;
+    height: 24px;
+    background: #334155;
+}
+
+.connector-arrow {
+    font-size: 1.5rem;
+    line-height: 1;
+}

@@ -29,6 +29,7 @@
                             <th>Nonce</th>
                             <th>Block Hash</th>
                             <th>Waktu Upload</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -39,8 +40,13 @@
                             <td>{{ document.file_size }} bytes</td>
                             <td>
                                 <code class="text-info small hash-text">
-                                    {{ document.document_hash }}
+                                    {{ document.document_hash[:16] }}...{{ document.document_hash[-10:] }}
                                 </code>
+                                <button class="btn btn-sm btn-outline-info ms-1"
+                                        data-copy="{{ document.document_hash }}"
+                                        onclick="copyHash(this)">
+                                    Copy
+                                </button>
                             </td>
                             <td>
                                 {% if document.block_index %}
@@ -53,13 +59,28 @@
                             <td>
                                 {% if document.block_hash %}
                                     <code class="text-success small hash-text">
-                                        {{ document.block_hash }}
+                                        {{ document.block_hash[:16] }}...{{ document.block_hash[-10:] }}
                                     </code>
+                                    <button class="btn btn-sm btn-outline-success ms-1"
+                                            data-copy="{{ document.block_hash }}"
+                                            onclick="copyHash(this)">
+                                        Copy
+                                    </button>
                                 {% else %}
                                     -
                                 {% endif %}
                             </td>
                             <td>{{ document.uploaded_at }}</td>
+                            <td>
+                                {% if document.block_index %}
+                                    <a href="{{ url_for('documents.proof_detail', block_index=document.block_index) }}"
+                                       class="btn btn-sm btn-outline-light">
+                                        Lihat Proof
+                                    </a>
+                                {% else %}
+                                    <span class="text-secondary">-</span>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>

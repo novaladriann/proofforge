@@ -246,6 +246,112 @@ def chain():
         SELECT
             b.*,
             d.original_filename,
+            d.file_size,
+            d.mime_type,
+            d.uploaded_at,
+            u.name AS owner_name,
+            u.email AS owner_email,
+            k.public_key_pem
+        FROM blocks b
+        LEFT JOIN documents d ON b.id_document = d.id_document
+        JOIN users u ON b.created_by = u.id_user
+        JOIN user_keys k ON u.id_user = k.id_user
+        ORDER BY b.block_index ASC
+        """
+    )
+
+    blocks = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    validation = validate_chain_integrity(blocks)
+    validation_map = {
+        int(item["block_index"]): item
+        for item in validation["results"]
+    }
+
+    return render_template(
+        "chain.html",
+        blocks=blocks,
+        validation=validation,
+        validation_map=validation_map
+    )
+@documents_bp.route("/proof/<int:block_index>")
+def proof_detail(block_index):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute(
+        """
+        SELECT
+            b.*,
+            d.original_filename,
+            d.file_size,
+            d.mime_type,
+            d.uploaded_at,
+            u.name AS owner_name,
+            u.email AS owner_email,
+            k.public_key_pem
+        FROM blocks b
+        LEFT JOIN documents d ON b.id_document = d.id_document
+        JOIN users u ON b.created_by = u.id_user
+        JOIN user_keys k ON u.id_user = k.id_user
+        WHERE b.block_index = %s
+        LIMIT 1
+        """,
+        (block_index,)
+    )
+
+    block = cursor.fetchone()
+
+    if not block:
+        cursor.close()
+        conn.close()
+        flash("Proof tidak ditemukan.", "danger")
+        return redirect(url_for("documents.chain"))
+
+    cursor.execute(
+        """
+        SELECT
+            b.*,
+            u.name AS owner_name,
+            u.email AS owner_email,
+            k.public_key_pem
+        FROM blocks b
+        JOIN users u ON b.created_by = u.id_user
+        JOIN user_keys k ON u.id_user = k.id_user
+        ORDER BY b.block_index ASC
+        """
+    )
+
+    all_blocks = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    validation = validate_chain_integrity(all_blocks)
+    validation_map = {
+        int(item["block_index"]): item
+        for item in validation["results"]
+    }
+
+    proof_status = validation_map.get(block_index)
+
+    return render_template(
+        "proof_detail.html",
+        block=block,
+        proof_status=proof_status,
+        validation=validation
+    )
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute(
+        """
+        SELECT
+            b.*,
+            d.original_filename,
             u.name AS owner_name,
             u.email AS owner_email
         FROM blocks b

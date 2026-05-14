@@ -1,106 +1,208 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %}
+
+{% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-  <div>
-    <h2 class="fw-bold">Public Blockchain</h2>
-    <p class="text-secondary mb-0">Visualisasi blok dokumen yang sudah terhubung dengan previous hash.</p>
-  </div>
+    <div>
+        <h2 class="fw-bold">Public Blockchain</h2>
+        <p class="text-secondary mb-0">
+            Visualisasi blok dokumen yang terhubung menggunakan previous hash.
+        </p>
+    </div>
 
-  <div>
-    <a href="{{ url_for('documents.validate_chain') }}" class="btn btn-success"> Validasi Chain </a>
+    <div>
+        <a href="{{ url_for('documents.validate_chain') }}" class="btn btn-success">
+            Validasi Chain
+        </a>
 
-    <a href="{{ url_for('documents.upload_document') }}" class="btn btn-primary"> Register Dokumen </a>
-  </div>
+        <a href="{{ url_for('documents.upload_document') }}" class="btn btn-primary">
+            Register Dokumen
+        </a>
+    </div>
 </div>
 
 {% if blocks %}
-<div class="row g-4">
-  {% for block in blocks %}
-  <div class="col-12">
-    <div class="card bg-dark text-light border-secondary shadow">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start mb-3">
-          <div>
-            <h4 class="fw-bold mb-1">Block #{{ block.block_index }}</h4>
-            <p class="text-secondary mb-0">Owner: {{ block.owner_name }} — {{ block.owner_email }}</p>
-          </div>
-
-          <span class="badge bg-success"> PoW Difficulty {{ block.difficulty }} </span>
+    {% if validation.chain_valid %}
+        <div class="alert alert-success">
+            <strong>CHAIN VALID.</strong>
+            Total {{ blocks|length }} blok terhubung dan belum terdeteksi manipulasi.
         </div>
-
-        <div class="mb-3">
-          <div class="text-secondary small">Nama Dokumen</div>
-          <div>{{ block.original_filename }}</div>
+    {% else %}
+        <div class="alert alert-danger">
+            <strong>CHAIN INVALID.</strong>
+            Ada blok yang tidak valid atau terdeteksi manipulasi.
         </div>
-
-        <div class="mb-3">
-          <div class="text-secondary small">Document Hash SHA-256</div>
-          <code class="text-info hash-text">{{ block.document_hash }}</code>
-        </div>
-
-        <div class="mb-3">
-          <div class="text-secondary small">Previous Hash</div>
-          <code class="text-warning hash-text">{{ block.previous_hash }}</code>
-        </div>
-
-        <div class="mb-3">
-          <div class="text-secondary small">Block Hash</div>
-          <code class="text-success hash-text">{{ block.block_hash }}</code>
-        </div>
-
-        <div class="row">
-          <div class="col-md-4">
-            <div class="text-secondary small">Nonce</div>
-            <div>{{ block.nonce }}</div>
-          </div>
-
-          <div class="col-md-4">
-            <div class="text-secondary small">Timestamp</div>
-            <div>{{ block.timestamp }}</div>
-          </div>
-
-          <div class="col-md-4">
-            <div class="text-secondary small">Signature</div>
-            <span class="badge bg-secondary">RSA Signature Stored</span>
-          </div>
-        </div>
-
-        <div class="mt-3">
-          <button class="btn btn-sm btn-outline-light" type="button" data-bs-toggle="collapse" data-bs-target="#signature{{ block.id_block }}">Lihat Signature</button>
-
-          <div class="collapse mt-3" id="signature{{ block.id_block }}">
-            <div class="p-3 rounded bg-black border border-secondary">
-              <code class="text-light small hash-text">{{ block.owner_signature }}</code>
-            </div>
-          </div>
-        </div>
-        {% if session.get("user_id") %}
-        <hr class="border-secondary" />
-
-        <div class="d-flex gap-2 flex-wrap">
-          <form method="POST" action="{{ url_for('documents.tamper_block', block_index=block.block_index) }}" onsubmit="return confirm('Yakin ingin mensimulasikan manipulasi pada blok ini?');">
-            <button type="submit" class="btn btn-sm btn-warning">Simulasi Manipulasi</button>
-          </form>
-
-          <form method="POST" action="{{ url_for('documents.restore_block', block_index=block.block_index) }}" onsubmit="return confirm('Pulihkan data blok ini untuk kebutuhan demo?');">
-            <button type="submit" class="btn btn-sm btn-outline-light">Pulihkan Data Demo</button>
-          </form>
-        </div>
-        {% endif %}
-      </div>
-    </div>
-
-    {% if not loop.last %}
-    <div class="text-center text-secondary fs-3 my-2">↓</div>
     {% endif %}
-  </div>
-  {% endfor %}
-</div>
+
+    <div class="chain-wrapper">
+        {% for block in blocks %}
+            {% set status = validation_map.get(block.block_index) %}
+
+            <div class="chain-card card bg-dark text-light border-secondary shadow">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <h4 class="fw-bold mb-0">Block #{{ block.block_index }}</h4>
+
+                                {% if status and status.block_valid %}
+                                    <span class="badge bg-success">VALID</span>
+                                {% else %}
+                                    <span class="badge bg-danger">INVALID</span>
+                                {% endif %}
+                            </div>
+
+                            <p class="text-secondary mb-0 mt-1">
+                                {{ block.original_filename }} · Owner: {{ block.owner_name }}
+                            </p>
+                        </div>
+
+                        <span class="badge bg-primary">
+                            Difficulty {{ block.difficulty }}
+                        </span>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <div class="proof-stat-card">
+                                <div class="text-secondary small">Nonce</div>
+                                <div class="fw-bold">{{ block.nonce }}</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="proof-stat-card">
+                                <div class="text-secondary small">Timestamp</div>
+                                <div class="fw-bold small">{{ block.timestamp }}</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="proof-stat-card">
+                                <div class="text-secondary small">Signature</div>
+                                <div>
+                                    {% if status and status.signature_valid %}
+                                        <span class="badge bg-success">Valid</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Invalid</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="proof-section">
+                        <div class="text-secondary small">Document Hash</div>
+                        <div class="hash-box compact">
+                            <code>{{ block.document_hash[:20] }}...{{ block.document_hash[-12:] }}</code>
+                            <button class="btn btn-sm btn-outline-info"
+                                    data-copy="{{ block.document_hash }}"
+                                    onclick="copyHash(this)">
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="proof-section">
+                        <div class="text-secondary small">Previous Hash</div>
+                        <div class="hash-box compact">
+                            <code>{{ block.previous_hash[:20] }}...{{ block.previous_hash[-12:] }}</code>
+                            <button class="btn btn-sm btn-outline-warning"
+                                    data-copy="{{ block.previous_hash }}"
+                                    onclick="copyHash(this)">
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="proof-section">
+                        <div class="text-secondary small">Block Hash</div>
+                        <div class="hash-box compact">
+                            <code>{{ block.block_hash[:20] }}...{{ block.block_hash[-12:] }}</code>
+                            <button class="btn btn-sm btn-outline-success"
+                                    data-copy="{{ block.block_hash }}"
+                                    onclick="copyHash(this)">
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 flex-wrap mt-4">
+                        <a href="{{ url_for('documents.proof_detail', block_index=block.block_index) }}"
+                           class="btn btn-sm btn-outline-info">
+                            Lihat Detail Proof
+                        </a>
+
+                        <button class="btn btn-sm btn-outline-light"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#fullBlock{{ block.id_block }}">
+                            Lihat Data Lengkap
+                        </button>
+
+                        {% if session.get("user_id") %}
+                            <form method="POST"
+                                  action="{{ url_for('documents.tamper_block', block_index=block.block_index) }}"
+                                  onsubmit="return confirm('Yakin ingin mensimulasikan manipulasi pada blok ini?')">
+                                <button type="submit" class="btn btn-sm btn-warning">
+                                    Simulasi Manipulasi
+                                </button>
+                            </form>
+
+                            <form method="POST"
+                                  action="{{ url_for('documents.restore_block', block_index=block.block_index) }}"
+                                  onsubmit="return confirm('Pulihkan data blok ini untuk kebutuhan demo?')">
+                                <button type="submit" class="btn btn-sm btn-outline-light">
+                                    Pulihkan Data Demo
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+
+                    <div class="collapse mt-3" id="fullBlock{{ block.id_block }}">
+                        <div class="p-3 rounded bg-black border border-secondary">
+                            <div class="mb-3">
+                                <div class="text-secondary small">Full Document Hash</div>
+                                <code class="hash-text text-info">{{ block.document_hash }}</code>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="text-secondary small">Full Previous Hash</div>
+                                <code class="hash-text text-warning">{{ block.previous_hash }}</code>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="text-secondary small">Full Block Hash</div>
+                                <code class="hash-text text-success">{{ block.block_hash }}</code>
+                            </div>
+
+                            <div>
+                                <div class="text-secondary small">RSA Signature</div>
+                                <code class="hash-text text-light">{{ block.owner_signature }}</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if not loop.last %}
+                <div class="chain-connector">
+                    <div class="connector-line"></div>
+                    <div class="connector-arrow">↓</div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
 {% else %}
-<div class="card bg-dark text-light border-secondary shadow">
-  <div class="card-body text-center py-5">
-    <h5>Blockchain masih kosong</h5>
-    <p class="text-secondary">Belum ada dokumen yang didaftarkan ke chain.</p>
-    <a href="{{ url_for('documents.upload_document') }}" class="btn btn-primary"> Register Dokumen Pertama </a>
-  </div>
-</div>
-{% endif %} {% endblock %}
+    <div class="card bg-dark text-light border-secondary shadow">
+        <div class="card-body text-center py-5">
+            <h5>Blockchain masih kosong</h5>
+            <p class="text-secondary">
+                Belum ada dokumen yang didaftarkan ke chain.
+            </p>
+            <a href="{{ url_for('documents.upload_document') }}" class="btn btn-primary">
+                Register Dokumen Pertama
+            </a>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
