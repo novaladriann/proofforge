@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+        <div class="card bg-dark text-light border-secondary shadow">
+            <div class="card-body p-4">
+                <h3 class="fw-bold mb-3">Verifikasi Dokumen</h3>
+
+                <p class="text-secondary">
+                    Upload dokumen yang ingin dicek. Sistem akan menghitung SHA-256
+                    dan mencari apakah hash dokumen tersebut ada di blockchain.
+                </p>
+
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">Pilih Dokumen</label>
+                        <input type="file" name="document" class="form-control" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        Verifikasi Dokumen
+                    </button>
+
+                    <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-light">
+                        Kembali
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if verification_result %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-10">
+        {% if verification_result.found %}
+            <div class="card bg-dark text-light border-success shadow">
+                <div class="card-body p-4">
+                    <h4 class="text-success fw-bold">TERDAFTAR</h4>
+                    <p class="text-secondary">
+                        Dokumen ini ditemukan di blockchain ProofForge.
+                    </p>
+
+                    <div class="mb-3">
+                        <div class="text-secondary small">SHA-256 Dokumen</div>
+                        <code class="text-info hash-text">
+                            {{ verification_result.document_hash }}
+                        </code>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="text-secondary small">Block Index</div>
+                            <div>
+                                <span class="badge bg-primary">
+                                    #{{ verification_result.block.block_index }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="text-secondary small">Owner</div>
+                            <div>{{ verification_result.block.owner_name }}</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="text-secondary small">Timestamp</div>
+                            <div>{{ verification_result.block.timestamp }}</div>
+                        </div>
+                    </div>
+
+                    <hr class="border-secondary">
+
+                    <div class="mb-3">
+                        <div class="text-secondary small">Previous Hash</div>
+                        <code class="text-warning hash-text">
+                            {{ verification_result.block.previous_hash }}
+                        </code>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="text-secondary small">Block Hash</div>
+                        <code class="text-success hash-text">
+                            {{ verification_result.block.block_hash }}
+                        </code>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="text-secondary small">Nonce</div>
+                            <div>{{ verification_result.block.nonce }}</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="text-secondary small">Difficulty</div>
+                            <div>{{ verification_result.block.difficulty }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="card bg-dark text-light border-danger shadow">
+                <div class="card-body p-4">
+                    <h4 class="text-danger fw-bold">TIDAK DITEMUKAN</h4>
+                    <p class="text-secondary">
+                        Hash dokumen ini tidak ditemukan di blockchain ProofForge.
+                        Dokumen mungkin belum pernah didaftarkan, atau isi file sudah berubah.
+                    </p>
+
+                    <div class="mb-3">
+                        <div class="text-secondary small">SHA-256 Dokumen yang Dihitung</div>
+                        <code class="text-info hash-text">
+                            {{ verification_result.document_hash }}
+                        </code>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

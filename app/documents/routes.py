@@ -6,8 +6,7 @@ from werkzeug.security import check_password_hash
 from app.db import get_db_connection
 from app.crypto.hash_utils import calculate_sha256_from_bytes
 from app.crypto.key_manager import load_private_key
-from app.crypto.blockchain import mine_block, sign_block_hash
-
+from app.crypto.blockchain import mine_block, sign_block_hash, validate_chain_integrity
 documents_bp = Blueprint("documents", __name__, url_prefix="/documents")
 
 
@@ -262,3 +261,199 @@ def chain():
     conn.close()
 
     return render_template("chain.html", blocks=blocks)
+
+@documents_bp.route("/verify", methods=["GET", "POST"])
+def verify_document():
+    verification_result = None
+
+    if request.method == "POST":
+        uploaded_file = request.files.get("document")
+
+        if not uploaded_file or uploaded_file.filename == "":
+            flash("Silakan pilih dokumen yang ingin diverifikasi.", "danger")
+            return redirect(url_for("documents.verify_document"))
+
+        file_bytes = uploaded_file.read()
+
+        if len(file_bytes) == 0:
+            flash("File kosong tidak dapat diverifikasi.", "danger")
+            return redirect(url_for("documents.verify_document"))
+
+        document_hash = calculate_sha256_from_bytes(file_bytes)
+
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute(
+            """
+            SELECT
+                b.*,
+                d.original_filename,
+                d.file_size,
+                d.mime_type,
+                d.uploaded_at,
+                u.name AS owner_name,
+                u.email AS owner_email
+            FROM blocks b
+            LEFT JOIN documents d ON b.id_document = d.id_document
+            JOIN users u ON b.created_by = u.id_user
+            WHERE b.document_hash = %s
+            LIMIT 1
+            """,
+            (document_hash,)
+        )
+
+        block = cursor.fetchone()
+
+        cursor.close()
+        conn.close()
+
+        if block:
+            verification_result = {
+                "found": True,
+                "document_hash": document_hash,
+                "block": block
+            }
+        else:
+            verification_result = {
+                "found": False,
+                "document_hash": document_hash,
+                "block": None
+            }
+
+    return render_template(
+        "verify_document.html",
+        verification_result=verification_result
+    )
+
+
+@documents_bp.route("/chain/validate")
+def validate_chain():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute(
+        """
+        SELECT
+            b.*,
+            u.name AS owner_name,
+            u.email AS owner_email,
+            k.public_key_pem
+        FROM blocks b
+        JOIN users u ON b.created_by = u.id_user
+        JOIN user_keys k ON u.id_user = k.id_user
+        ORDER BY b.block_index ASC
+        """
+    )
+
+    blocks = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    validation = validate_chain_integrity(blocks)
+
+    return render_template(
+        "chain_validation.html",
+        validation=validation
+    )
+
+
+@documents_bp.route("/chain/tamper/<int:block_index>", methods=["POST"])
+def tamper_block(block_index):
+    if not login_required():
+        return redirect(url_for("auth.login"))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute(
+        """
+        SELECT id_block, document_hash
+        FROM blocks
+        WHERE block_index = %s
+        """,
+        (block_index,)
+    )
+
+    block = cursor.fetchone()
+
+    if not block:
+        cursor.close()
+        conn.close()
+        flash("Blok tidak ditemukan.", "danger")
+        return redirect(url_for("documents.chain"))
+
+    old_hash = block["document_hash"]
+
+    if old_hash[0] != "f":
+        tampered_hash = "f" + old_hash[1:]
+    else:
+        tampered_hash = "e" + old_hash[1:]
+
+    cursor.execute(
+        """
+        UPDATE blocks
+        SET document_hash = %s
+        WHERE block_index = %s
+        """,
+        (tampered_hash, block_index)
+    )
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash(
+        f"Simulasi manipulasi berhasil. Document hash pada Block #{block_index} telah diubah.",
+        "warning"
+    )
+
+    return redirect(url_for("documents.chain"))
+
+
+@documents_bp.route("/chain/restore/<int:block_index>", methods=["POST"])
+def restore_block(block_index):
+    if not login_required():
+        return redirect(url_for("auth.login"))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute(
+        """
+        SELECT b.id_block, d.document_hash AS original_document_hash
+        FROM blocks b
+        JOIN documents d ON b.id_document = d.id_document
+        WHERE b.block_index = %s
+        """,
+        (block_index,)
+    )
+
+    block = cursor.fetchone()
+
+    if not block:
+        cursor.close()
+        conn.close()
+        flash("Data original blok tidak ditemukan.", "danger")
+        return redirect(url_for("documents.chain"))
+
+    cursor.execute(
+        """
+        UPDATE blocks
+        SET document_hash = %s
+        WHERE block_index = %s
+        """,
+        (block["original_document_hash"], block_index)
+    )
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash(
+        f"Block #{block_index} berhasil dipulihkan untuk kebutuhan demo.",
+        "success"
+    )
+
+    return redirect(url_for("documents.chain"))

@@ -1,62 +1,44 @@
-{% extends "base.html" %}
-
-{% block content %}
+{% extends "base.html" %} {% block content %}
 <div class="row">
-    <div class="col-12">
-        <div class="p-4 bg-dark text-light rounded border border-secondary shadow-sm">
-            <h2 class="fw-bold">Dashboard ProofForge</h2>
-            <p class="text-secondary mb-0">
-                Selamat datang, {{ session.get("user_name") }}.
-                ProofForge digunakan untuk membuat bukti integritas dokumen berbasis blockchain sederhana.
-            </p>
-        </div>
+  <div class="col-12">
+    <div class="p-4 bg-dark text-light rounded border border-secondary shadow-sm">
+      <h2 class="fw-bold">Dashboard ProofForge</h2>
+      <p class="text-secondary mb-0">Selamat datang, {{ session.get("user_name") }}. ProofForge digunakan untuk membuat bukti integritas dokumen berbasis blockchain sederhana.</p>
     </div>
+  </div>
 </div>
 
 <div class="row mt-4 g-3">
-    <div class="col-md-4">
-        <div class="card bg-dark text-light border-secondary h-100">
-            <div class="card-body">
-                <h5>Register Dokumen</h5>
-                <p class="text-secondary">
-                    Upload dokumen untuk dihitung SHA-256, dibuatkan blok, dan ditandatangani secara digital.
-                </p>
-                <a href="{{ url_for('documents.upload_document') }}" class="btn btn-primary">
-                    Register Dokumen
-                </a>
-                <a href="{{ url_for('documents.my_documents') }}" class="btn btn-outline-light mt-2">
-                    Lihat Dokumen Saya
-                </a>
-            </div>
-        </div>
+  <div class="col-md-4">
+    <div class="card bg-dark text-light border-secondary h-100">
+      <div class="card-body">
+        <h5>Register Dokumen</h5>
+        <p class="text-secondary">Upload dokumen untuk dihitung SHA-256, dibuatkan blok, dan ditandatangani secara digital.</p>
+        <a href="{{ url_for('documents.upload_document') }}" class="btn btn-primary"> Register Dokumen </a>
+        <a href="{{ url_for('documents.my_documents') }}" class="btn btn-outline-light mt-2"> Lihat Dokumen Saya </a>
+      </div>
     </div>
+  </div>
 
-    <div class="col-md-4">
-        <div class="card bg-dark text-light border-secondary h-100">
-            <div class="card-body">
-                <h5>Verifikasi Dokumen</h5>
-                <p class="text-secondary">
-                    Upload dokumen ulang untuk mengecek apakah hash-nya terdaftar di blockchain.
-                </p>
-                <button class="btn btn-outline-light" disabled>
-                    Modul Berikutnya
-                </button>
-            </div>
-        </div>
+  <div class="col-md-4">
+    <div class="card bg-dark text-light border-secondary h-100">
+      <div class="card-body">
+        <h5>Verifikasi Dokumen</h5>
+        <p class="text-secondary">Upload dokumen ulang untuk mengecek apakah hash-nya terdaftar di blockchain.</p>
+        <a href="{{ url_for('documents.verify_document') }}" class="btn btn-outline-light"> Verifikasi Dokumen </a>
+      </div>
     </div>
+  </div>
 
-    <div class="col-md-4">
-        <div class="card bg-dark text-light border-secondary h-100">
-            <div class="card-body">
-                <h5>Lihat Blockchain</h5>
-                <p class="text-secondary">
-                    Lihat blok, previous hash, nonce, Proof of Work, dan signature.
-                </p>
-                <a href="{{ url_for('documents.chain') }}" class="btn btn-outline-light">
-                    Lihat Chain
-                </a>
-            </div>
-        </div>
+  <div class="col-md-4">
+    <div class="card bg-dark text-light border-secondary h-100">
+      <div class="card-body">
+        <h5>Lihat Blockchain</h5>
+        <p class="text-secondary">Lihat blok, previous hash, nonce, Proof of Work, dan signature.</p>
+        <a href="{{ url_for('documents.chain') }}" class="btn btn-outline-light"> Lihat Chain </a>
+        <a href="{{ url_for('documents.validate_chain') }}" class="btn btn-success mt-2"> Validasi Chain </a>
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}
