@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card bg-dark text-light border-secondary shadow">
+    <div class="card-body p-4">
+        <h2 class="fw-bold mb-3">Public API ProofForge</h2>
+
+        <p class="text-secondary">
+            API ini digunakan untuk memverifikasi dokumen dan melihat status blockchain
+            tanpa perlu login. Cocok untuk pihak luar yang ingin mengecek apakah dokumen
+            sudah pernah didaftarkan ke ProofForge.
+        </p>
+
+        <hr class="border-secondary">
+
+        <h5 class="fw-bold">1. Verifikasi Dokumen</h5>
+        <p class="text-secondary mb-2">
+            Endpoint ini menerima file dokumen, menghitung SHA-256, lalu mencari hash tersebut di blockchain.
+        </p>
+
+        <div class="p-3 bg-black rounded border border-secondary mb-3">
+            <code>POST /api/verify</code>
+        </div>
+
+        <p class="mb-1">Form-data:</p>
+        <div class="p-3 bg-black rounded border border-secondary mb-4">
+            <code>document = file_yang_ingin_diverifikasi</code>
+        </div>
+
+        <h6>Contoh menggunakan curl:</h6>
+        <div class="p-3 bg-black rounded border border-secondary mb-4">
+            <code class="hash-text">
+                curl -X POST http://127.0.0.1:5000/api/verify -F "document=@contoh.pdf"
+            </code>
+        </div>
+
+        <hr class="border-secondary">
+
+        <h5 class="fw-bold">2. Lihat Public Chain</h5>
+        <p class="text-secondary mb-2">
+            Endpoint ini menampilkan semua blok yang sudah dibuat.
+        </p>
+
+        <div class="p-3 bg-black rounded border border-secondary mb-4">
+            <code>GET /api/chain</code>
+        </div>
+
+        <hr class="border-secondary">
+
+        <h5 class="fw-bold">3. Status Integritas Chain</h5>
+        <p class="text-secondary mb-2">
+            Endpoint ini mengecek apakah chain masih valid atau sudah terdeteksi manipulasi.
+        </p>
+
+        <div class="p-3 bg-black rounded border border-secondary mb-4">
+            <code>GET /api/chain/status</code>
+        </div>
+
+        <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-light">
+            Kembali
+        </a>
+    </div>
+</div>
+{% endblock %}

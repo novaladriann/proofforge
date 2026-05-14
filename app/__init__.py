@@ -8,9 +8,11 @@ def create_app():
     from app.auth.routes import auth_bp
     from app.dashboard.routes import dashboard_bp
     from app.documents.routes import documents_bp
+    from app.api.routes import api_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(documents_bp)
+    app.register_blueprint(api_bp)
 
     return app
