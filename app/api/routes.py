@@ -1,11 +1,28 @@
 from flask import Blueprint, request, jsonify
 
 from app.db import get_db_connection
-from app.crypto.hash_utils import calculate_sha256_from_bytes
+from app.crypto.hash_utils import (
+    calculate_sha256_from_bytes,
+    generate_fingerprint_from_text,
+    make_public_document_label
+)
 from app.crypto.blockchain import validate_chain_integrity
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
+def build_public_block_response(block):
+    owner_fingerprint = generate_fingerprint_from_text(block["public_key_pem"])
 
+    return {
+        "block_index": block["block_index"],
+        "document_label": make_public_document_label(block["block_index"]),
+        "document_hash": block["document_hash"],
+        "previous_hash": block["previous_hash"],
+        "block_hash": block["block_hash"],
+        "nonce": block["nonce"],
+        "difficulty": block["difficulty"],
+        "timestamp": str(block["timestamp"]),
+        "owner_fingerprint": owner_fingerprint
+    }
 
 @api_bp.route("/verify", methods=["POST"])
 def api_verify_document():
@@ -40,15 +57,10 @@ def api_verify_document():
             b.nonce,
             b.difficulty,
             b.timestamp,
-            d.original_filename,
-            d.file_size,
-            d.mime_type,
-            d.uploaded_at,
-            u.name AS owner_name,
-            u.email AS owner_email
+            k.public_key_pem
         FROM blocks b
-        LEFT JOIN documents d ON b.id_document = d.id_document
         JOIN users u ON b.created_by = u.id_user
+        JOIN user_keys k ON u.id_user = k.id_user
         WHERE b.document_hash = %s
         LIMIT 1
         """,
@@ -73,21 +85,7 @@ def api_verify_document():
         "status": "TERDAFTAR",
         "message": "Dokumen ditemukan di blockchain ProofForge.",
         "document_hash": document_hash,
-        "proof": {
-            "block_index": block["block_index"],
-            "document_hash": block["document_hash"],
-            "previous_hash": block["previous_hash"],
-            "block_hash": block["block_hash"],
-            "nonce": block["nonce"],
-            "difficulty": block["difficulty"],
-            "timestamp": str(block["timestamp"]),
-            "owner_name": block["owner_name"],
-            "owner_email": block["owner_email"],
-            "original_filename": block["original_filename"],
-            "file_size": block["file_size"],
-            "mime_type": block["mime_type"],
-            "uploaded_at": str(block["uploaded_at"])
-        }
+        "proof": build_public_block_response(block)
     }), 200
 
 
@@ -106,12 +104,10 @@ def api_get_chain():
             b.nonce,
             b.difficulty,
             b.timestamp,
-            d.original_filename,
-            u.name AS owner_name,
-            u.email AS owner_email
+            k.public_key_pem
         FROM blocks b
-        LEFT JOIN documents d ON b.id_document = d.id_document
         JOIN users u ON b.created_by = u.id_user
+        JOIN user_keys k ON u.id_user = k.id_user
         ORDER BY b.block_index ASC
         """
     )
@@ -121,28 +117,16 @@ def api_get_chain():
     cursor.close()
     conn.close()
 
-    chain_data = []
-
-    for block in blocks:
-        chain_data.append({
-            "block_index": block["block_index"],
-            "document_hash": block["document_hash"],
-            "previous_hash": block["previous_hash"],
-            "block_hash": block["block_hash"],
-            "nonce": block["nonce"],
-            "difficulty": block["difficulty"],
-            "timestamp": str(block["timestamp"]),
-            "original_filename": block["original_filename"],
-            "owner_name": block["owner_name"],
-            "owner_email": block["owner_email"]
-        })
+    chain_data = [
+        build_public_block_response(block)
+        for block in blocks
+    ]
 
     return jsonify({
         "success": True,
         "total_blocks": len(chain_data),
         "chain": chain_data
     }), 200
-
 
 @api_bp.route("/chain/status", methods=["GET"])
 def api_chain_status():
@@ -164,7 +148,8 @@ def api_chain_status():
     )
 
     blocks = cursor.fetchall()
-
+    for block in blocks:
+        block["owner_fingerprint"] = generate_fingerprint_from_text(block["public_key_pem"])
     cursor.close()
     conn.close()
 

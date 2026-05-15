@@ -4,7 +4,11 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash
 
 from app.db import get_db_connection
-from app.crypto.hash_utils import calculate_sha256_from_bytes
+from app.crypto.hash_utils import (
+    calculate_sha256_from_bytes,
+    generate_fingerprint_from_text,
+    make_public_document_label
+)
 from app.crypto.key_manager import load_private_key
 from app.crypto.blockchain import mine_block, sign_block_hash, validate_chain_integrity
 documents_bp = Blueprint("documents", __name__, url_prefix="/documents")
@@ -12,7 +16,20 @@ documents_bp = Blueprint("documents", __name__, url_prefix="/documents")
 
 def login_required():
     return "user_id" in session
+def attach_public_privacy_fields(block):
+    """
+    Menambahkan field publik yang aman untuk ditampilkan.
+    Tidak membuka nama, email, atau nama file asli.
+    """
+    if not block:
+        return block
 
+    public_key_pem = block.get("public_key_pem", "")
+
+    block["owner_fingerprint"] = generate_fingerprint_from_text(public_key_pem)
+    block["public_document_label"] = make_public_document_label(block["block_index"])
+
+    return block
 
 def get_next_block_data(cursor):
     """
@@ -265,6 +282,9 @@ def chain():
     cursor.close()
     conn.close()
 
+    for block in blocks:
+        attach_public_privacy_fields(block)
+
     validation = validate_chain_integrity(blocks)
     validation_map = {
         int(item["block_index"]): item
@@ -311,6 +331,13 @@ def proof_detail(block_index):
         flash("Proof tidak ditemukan.", "danger")
         return redirect(url_for("documents.chain"))
 
+    attach_public_privacy_fields(block)
+
+    can_view_private = (
+        "user_id" in session and
+        int(session["user_id"]) == int(block["created_by"])
+    )
+
     cursor.execute(
         """
         SELECT
@@ -330,6 +357,9 @@ def proof_detail(block_index):
     cursor.close()
     conn.close()
 
+    for item in all_blocks:
+        attach_public_privacy_fields(item)
+
     validation = validate_chain_integrity(all_blocks)
     validation_map = {
         int(item["block_index"]): item
@@ -342,31 +372,9 @@ def proof_detail(block_index):
         "proof_detail.html",
         block=block,
         proof_status=proof_status,
-        validation=validation
+        validation=validation,
+        can_view_private=can_view_private
     )
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    cursor.execute(
-        """
-        SELECT
-            b.*,
-            d.original_filename,
-            u.name AS owner_name,
-            u.email AS owner_email
-        FROM blocks b
-        LEFT JOIN documents d ON b.id_document = d.id_document
-        JOIN users u ON b.created_by = u.id_user
-        ORDER BY b.block_index ASC
-        """
-    )
-
-    blocks = cursor.fetchall()
-
-    cursor.close()
-    conn.close()
-
-    return render_template("chain.html", blocks=blocks)
 
 @documents_bp.route("/verify", methods=["GET", "POST"])
 def verify_document():
@@ -399,17 +407,22 @@ def verify_document():
                 d.mime_type,
                 d.uploaded_at,
                 u.name AS owner_name,
-                u.email AS owner_email
+                u.email AS owner_email,
+                k.public_key_pem
             FROM blocks b
             LEFT JOIN documents d ON b.id_document = d.id_document
             JOIN users u ON b.created_by = u.id_user
+            JOIN user_keys k ON u.id_user = k.id_user
             WHERE b.document_hash = %s
             LIMIT 1
+            
             """,
             (document_hash,)
         )
 
         block = cursor.fetchone()
+        if block:
+            attach_public_privacy_fields(block)
 
         cursor.close()
         conn.close()
@@ -453,9 +466,12 @@ def validate_chain():
     )
 
     blocks = cursor.fetchall()
+    
 
     cursor.close()
     conn.close()
+    for block in blocks:
+        attach_public_privacy_fields(block)
 
     validation = validate_chain_integrity(blocks)
 

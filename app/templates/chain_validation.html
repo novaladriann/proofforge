@@ -1,119 +1,103 @@
-{% extends "base.html" %}
-
-{% block content %}
+{% extends "base.html" %} {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="fw-bold">Validasi Integritas Chain</h2>
-        <p class="text-secondary mb-0">
-            Sistem mengecek ulang previous hash, block hash, Proof of Work, dan RSA signature.
-        </p>
-    </div>
+  <div>
+    <h2 class="fw-bold">Validasi Integritas Chain</h2>
+    <p class="text-secondary mb-0">Sistem mengecek ulang previous hash, block hash, Proof of Work, dan RSA signature.</p>
+  </div>
 
-    <a href="{{ url_for('documents.chain') }}" class="btn btn-outline-light">
-        Kembali ke Chain
-    </a>
+  <a href="{{ url_for('documents.chain') }}" class="btn btn-outline-light"> Kembali ke Chain </a>
 </div>
 
 {% if validation.chain_valid %}
-    <div class="alert alert-success">
-        <strong>CHAIN VALID.</strong>
-        Semua blok masih terhubung dan belum terdeteksi manipulasi.
-    </div>
+<div class="alert alert-success">
+  <strong>CHAIN VALID.</strong>
+  Semua blok masih terhubung dan belum terdeteksi manipulasi.
+</div>
 {% else %}
-    <div class="alert alert-danger">
-        <strong>CHAIN INVALID.</strong>
-        Sistem mendeteksi ada blok yang tidak valid atau sudah dimanipulasi.
-    </div>
-{% endif %}
-
-{% if validation.results %}
-    <div class="row g-4">
-        {% for item in validation.results %}
-        <div class="col-12">
-            <div class="card bg-dark text-light border-secondary shadow">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div>
-                            <h4 class="fw-bold mb-1">Block #{{ item.block_index }}</h4>
-                            <p class="text-secondary mb-0">
-                                Owner: {{ item.owner_name }} — {{ item.owner_email }}
-                            </p>
-                        </div>
-
-                        {% if item.block_valid %}
-                            <span class="badge bg-success">VALID</span>
-                        {% else %}
-                            <span class="badge bg-danger">INVALID</span>
-                        {% endif %}
-                    </div>
-
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-3">
-                            <div class="text-secondary small">Previous Hash</div>
-                            {% if item.previous_hash_valid %}
-                                <span class="badge bg-success">Valid</span>
-                            {% else %}
-                                <span class="badge bg-danger">Invalid</span>
-                            {% endif %}
-                        </div>
-
-                        <div class="col-md-3">
-                            <div class="text-secondary small">Block Hash</div>
-                            {% if item.hash_match %}
-                                <span class="badge bg-success">Valid</span>
-                            {% else %}
-                                <span class="badge bg-danger">Invalid</span>
-                            {% endif %}
-                        </div>
-
-                        <div class="col-md-3">
-                            <div class="text-secondary small">Proof of Work</div>
-                            {% if item.pow_valid %}
-                                <span class="badge bg-success">Valid</span>
-                            {% else %}
-                                <span class="badge bg-danger">Invalid</span>
-                            {% endif %}
-                        </div>
-
-                        <div class="col-md-3">
-                            <div class="text-secondary small">RSA Signature</div>
-                            {% if item.signature_valid %}
-                                <span class="badge bg-success">Valid</span>
-                            {% else %}
-                                <span class="badge bg-danger">Invalid</span>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <div class="text-secondary small">Stored Block Hash</div>
-                        <code class="text-success hash-text">{{ item.stored_hash }}</code>
-                    </div>
-
-                    <div class="mb-3">
-                        <div class="text-secondary small">Calculated Block Hash</div>
-                        <code class="text-info hash-text">{{ item.calculated_hash }}</code>
-                    </div>
-
-                    {% if not item.hash_match %}
-                        <div class="alert alert-warning mb-0">
-                            Hash hasil perhitungan ulang berbeda dengan hash yang tersimpan.
-                            Ini menandakan data blok pernah berubah.
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-{% else %}
+<div class="alert alert-danger">
+  <strong>CHAIN INVALID.</strong>
+  Sistem mendeteksi ada blok yang tidak valid atau sudah dimanipulasi.
+</div>
+{% endif %} {% if validation.results %}
+<div class="row g-4">
+  {% for item in validation.results %}
+  <div class="col-12">
     <div class="card bg-dark text-light border-secondary shadow">
-        <div class="card-body text-center py-5">
-            <h5>Belum ada blok</h5>
-            <p class="text-secondary">
-                Chain masih kosong, belum ada yang bisa divalidasi.
-            </p>
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div>
+            <h4 class="fw-bold mb-1">Block #{{ item.block_index }}</h4>
+            <p class="text-secondary mb-0">Owner Fingerprint: {{ item.owner_fingerprint }}</p>
+          </div>
+
+          {% if item.block_valid %}
+          <span class="badge bg-success">VALID</span>
+          {% else %}
+          <span class="badge bg-danger">INVALID</span>
+          {% endif %}
         </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-3">
+            <div class="text-secondary small">Previous Hash</div>
+            {% if item.previous_hash_valid %}
+            <span class="badge bg-success">Valid</span>
+            {% else %}
+            <span class="badge bg-danger">Invalid</span>
+            {% endif %}
+          </div>
+
+          <div class="col-md-3">
+            <div class="text-secondary small">Block Hash</div>
+            {% if item.hash_match %}
+            <span class="badge bg-success">Valid</span>
+            {% else %}
+            <span class="badge bg-danger">Invalid</span>
+            {% endif %}
+          </div>
+
+          <div class="col-md-3">
+            <div class="text-secondary small">Proof of Work</div>
+            {% if item.pow_valid %}
+            <span class="badge bg-success">Valid</span>
+            {% else %}
+            <span class="badge bg-danger">Invalid</span>
+            {% endif %}
+          </div>
+
+          <div class="col-md-3">
+            <div class="text-secondary small">RSA Signature</div>
+            {% if item.signature_valid %}
+            <span class="badge bg-success">Valid</span>
+            {% else %}
+            <span class="badge bg-danger">Invalid</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <div class="text-secondary small">Stored Block Hash</div>
+          <code class="text-success hash-text">{{ item.stored_hash }}</code>
+        </div>
+
+        <div class="mb-3">
+          <div class="text-secondary small">Calculated Block Hash</div>
+          <code class="text-info hash-text">{{ item.calculated_hash }}</code>
+        </div>
+
+        {% if not item.hash_match %}
+        <div class="alert alert-warning mb-0">Hash hasil perhitungan ulang berbeda dengan hash yang tersimpan. Ini menandakan data blok pernah berubah.</div>
+        {% endif %}
+      </div>
     </div>
-{% endif %}
-{% endblock %}
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card bg-dark text-light border-secondary shadow">
+  <div class="card-body text-center py-5">
+    <h5>Belum ada blok</h5>
+    <p class="text-secondary">Chain masih kosong, belum ada yang bisa divalidasi.</p>
+  </div>
+</div>
+{% endif %} {% endblock %}

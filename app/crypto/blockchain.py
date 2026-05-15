@@ -148,6 +148,7 @@ def validate_chain_integrity(blocks):
             "block_valid": block_valid,
             "owner_name": block.get("owner_name"),
             "owner_email": block.get("owner_email"),
+            "owner_fingerprint": block.get("owner_fingerprint"),
             "timestamp": block["timestamp"]
         })
 

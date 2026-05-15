@@ -1,211 +1,190 @@
-{% extends "base.html" %}
-
-{% block content %}
+{% extends "base.html" %} {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="fw-bold">Detail Proof Dokumen</h2>
-        <p class="text-secondary mb-0">
-            Bukti kriptografis bahwa hash dokumen sudah tercatat di blockchain ProofForge.
-        </p>
-    </div>
+  <div>
+    <h2 class="fw-bold">Detail Proof Dokumen</h2>
+    <p class="text-secondary mb-0">Bukti kriptografis bahwa hash dokumen sudah tercatat di blockchain ProofForge.</p>
+  </div>
 
-    <div>
-        <a href="{{ url_for('documents.verify_document') }}" class="btn btn-outline-info">
-            Verifikasi Dokumen
-        </a>
-        <a href="{{ url_for('documents.chain') }}" class="btn btn-outline-light">
-            Kembali ke Chain
-        </a>
-    </div>
+  <div>
+    <a href="{{ url_for('documents.verify_document') }}" class="btn btn-outline-info"> Verifikasi Dokumen </a>
+    <a href="{{ url_for('documents.chain') }}" class="btn btn-outline-light"> Kembali ke Chain </a>
+  </div>
 </div>
 
 {% if proof_status and proof_status.block_valid %}
-    <div class="alert alert-success">
-        <strong>PROOF VALID.</strong>
-        Block hash, previous hash, Proof of Work, dan RSA signature masih valid.
-    </div>
+<div class="alert alert-success">
+  <strong>PROOF VALID.</strong>
+  Block hash, previous hash, Proof of Work, dan RSA signature masih valid.
+</div>
 {% else %}
-    <div class="alert alert-danger">
-        <strong>PROOF INVALID.</strong>
-        Ada data blok yang tidak cocok atau terdeteksi manipulasi.
-    </div>
+<div class="alert alert-danger">
+  <strong>PROOF INVALID.</strong>
+  Ada data blok yang tidak cocok atau terdeteksi manipulasi.
+</div>
 {% endif %}
 
 <div class="row g-4">
-    <div class="col-lg-8">
-        <div class="card bg-dark text-light border-secondary shadow h-100">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                        <h4 class="fw-bold mb-1">Block #{{ block.block_index }}</h4>
-                        <p class="text-secondary mb-0">
-                            Dokumen: {{ block.original_filename }}
-                        </p>
-                    </div>
+  <div class="col-lg-8">
+    <div class="card bg-dark text-light border-secondary shadow h-100">
+      <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div>
+            <h4 class="fw-bold mb-1">Block #{{ block.block_index }}</h4>
+            <p class="text-secondary mb-0">Dokumen: {% if can_view_private %} {{ block.original_filename }} {% else %} {{ block.public_document_label }} {% endif %}</p>
+          </div>
 
-                    {% if proof_status and proof_status.block_valid %}
-                        <span class="badge bg-success fs-6">VALID</span>
-                    {% else %}
-                        <span class="badge bg-danger fs-6">INVALID</span>
-                    {% endif %}
-                </div>
-
-                <div class="proof-section">
-                    <div class="text-secondary small">SHA-256 Dokumen</div>
-                    <div class="hash-box">
-                        <code>{{ block.document_hash }}</code>
-                        <button class="btn btn-sm btn-outline-info"
-                                data-copy="{{ block.document_hash }}"
-                                onclick="copyHash(this)">
-                            Copy
-                        </button>
-                    </div>
-                </div>
-
-                <div class="proof-section">
-                    <div class="text-secondary small">Previous Hash</div>
-                    <div class="hash-box">
-                        <code>{{ block.previous_hash }}</code>
-                        <button class="btn btn-sm btn-outline-warning"
-                                data-copy="{{ block.previous_hash }}"
-                                onclick="copyHash(this)">
-                            Copy
-                        </button>
-                    </div>
-                </div>
-
-                <div class="proof-section">
-                    <div class="text-secondary small">Block Hash</div>
-                    <div class="hash-box">
-                        <code>{{ block.block_hash }}</code>
-                        <button class="btn btn-sm btn-outline-success"
-                                data-copy="{{ block.block_hash }}"
-                                onclick="copyHash(this)">
-                            Copy
-                        </button>
-                    </div>
-                </div>
-
-                <div class="row g-3 mt-2">
-                    <div class="col-md-4">
-                        <div class="proof-stat-card">
-                            <div class="text-secondary small">Nonce</div>
-                            <div class="fw-bold">{{ block.nonce }}</div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="proof-stat-card">
-                            <div class="text-secondary small">Difficulty</div>
-                            <div class="fw-bold">{{ block.difficulty }}</div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="proof-stat-card">
-                            <div class="text-secondary small">Timestamp</div>
-                            <div class="fw-bold small">{{ block.timestamp }}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <hr class="border-secondary">
-
-                <button class="btn btn-sm btn-outline-light"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#signatureBox">
-                    Lihat RSA Signature
-                </button>
-
-                <div class="collapse mt-3" id="signatureBox">
-                    <div class="hash-box">
-                        <code>{{ block.owner_signature }}</code>
-                        <button class="btn btn-sm btn-outline-light"
-                                data-copy="{{ block.owner_signature }}"
-                                onclick="copyHash(this)">
-                            Copy
-                        </button>
-                    </div>
-                </div>
-            </div>
+          {% if proof_status and proof_status.block_valid %}
+          <span class="badge bg-success fs-6">VALID</span>
+          {% else %}
+          <span class="badge bg-danger fs-6">INVALID</span>
+          {% endif %}
         </div>
+
+        <div class="proof-section">
+          <div class="text-secondary small">SHA-256 Dokumen</div>
+          <div class="hash-box">
+            <code>{{ block.document_hash }}</code>
+            <button class="btn btn-sm btn-outline-info" data-copy="{{ block.document_hash }}" onclick="copyHash(this)">Copy</button>
+          </div>
+        </div>
+
+        <div class="proof-section">
+          <div class="text-secondary small">Previous Hash</div>
+          <div class="hash-box">
+            <code>{{ block.previous_hash }}</code>
+            <button class="btn btn-sm btn-outline-warning" data-copy="{{ block.previous_hash }}" onclick="copyHash(this)">Copy</button>
+          </div>
+        </div>
+
+        <div class="proof-section">
+          <div class="text-secondary small">Block Hash</div>
+          <div class="hash-box">
+            <code>{{ block.block_hash }}</code>
+            <button class="btn btn-sm btn-outline-success" data-copy="{{ block.block_hash }}" onclick="copyHash(this)">Copy</button>
+          </div>
+        </div>
+
+        <div class="row g-3 mt-2">
+          <div class="col-md-4">
+            <div class="proof-stat-card">
+              <div class="text-secondary small">Nonce</div>
+              <div class="fw-bold">{{ block.nonce }}</div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="proof-stat-card">
+              <div class="text-secondary small">Difficulty</div>
+              <div class="fw-bold">{{ block.difficulty }}</div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="proof-stat-card">
+              <div class="text-secondary small">Timestamp</div>
+              <div class="fw-bold small">{{ block.timestamp }}</div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="border-secondary" />
+
+        <button class="btn btn-sm btn-outline-light" type="button" data-bs-toggle="collapse" data-bs-target="#signatureBox">Lihat RSA Signature</button>
+
+        <div class="collapse mt-3" id="signatureBox">
+          <div class="hash-box">
+            <code>{{ block.owner_signature }}</code>
+            <button class="btn btn-sm btn-outline-light" data-copy="{{ block.owner_signature }}" onclick="copyHash(this)">Copy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card bg-dark text-light border-secondary shadow mb-4">
+      <div class="card-body p-4">
+        <h5 class="fw-bold">Informasi Pemilik</h5>
+
+        {% if can_view_private %}
+        <div class="mt-3">
+          <div class="text-secondary small">Nama</div>
+          <div>{{ block.owner_name }}</div>
+        </div>
+
+        <div class="mt-3">
+          <div class="text-secondary small">Email</div>
+          <div>{{ block.owner_email }}</div>
+        </div>
+        {% else %}
+        <div class="mt-3">
+          <div class="text-secondary small">Owner Fingerprint</div>
+          <div>{{ block.owner_fingerprint }}</div>
+        </div>
+
+        <div class="mt-3">
+          <div class="text-secondary small">Identitas Pemilik</div>
+          <div class="text-secondary">Disamarkan pada akses publik</div>
+        </div>
+        {% endif %}
+
+        <div class="mt-3">
+          <div class="text-secondary small">File Size</div>
+          <div>{{ block.file_size }} bytes</div>
+        </div>
+
+        <div class="mt-3">
+          <div class="text-secondary small">MIME Type</div>
+          <div>{{ block.mime_type }}</div>
+        </div>
+      </div>
     </div>
 
-    <div class="col-lg-4">
-        <div class="card bg-dark text-light border-secondary shadow mb-4">
-            <div class="card-body p-4">
-                <h5 class="fw-bold">Informasi Pemilik</h5>
+    <div class="card bg-dark text-light border-secondary shadow">
+      <div class="card-body p-4">
+        <h5 class="fw-bold">Status Validasi</h5>
 
-                <div class="mt-3">
-                    <div class="text-secondary small">Nama</div>
-                    <div>{{ block.owner_name }}</div>
-                </div>
-
-                <div class="mt-3">
-                    <div class="text-secondary small">Email</div>
-                    <div>{{ block.owner_email }}</div>
-                </div>
-
-                <div class="mt-3">
-                    <div class="text-secondary small">File Size</div>
-                    <div>{{ block.file_size }} bytes</div>
-                </div>
-
-                <div class="mt-3">
-                    <div class="text-secondary small">MIME Type</div>
-                    <div>{{ block.mime_type }}</div>
-                </div>
-            </div>
+        {% if proof_status %}
+        <div class="validation-row">
+          <span>Previous Hash</span>
+          {% if proof_status.previous_hash_valid %}
+          <span class="badge bg-success">Valid</span>
+          {% else %}
+          <span class="badge bg-danger">Invalid</span>
+          {% endif %}
         </div>
 
-        <div class="card bg-dark text-light border-secondary shadow">
-            <div class="card-body p-4">
-                <h5 class="fw-bold">Status Validasi</h5>
-
-                {% if proof_status %}
-                    <div class="validation-row">
-                        <span>Previous Hash</span>
-                        {% if proof_status.previous_hash_valid %}
-                            <span class="badge bg-success">Valid</span>
-                        {% else %}
-                            <span class="badge bg-danger">Invalid</span>
-                        {% endif %}
-                    </div>
-
-                    <div class="validation-row">
-                        <span>Block Hash</span>
-                        {% if proof_status.hash_match %}
-                            <span class="badge bg-success">Valid</span>
-                        {% else %}
-                            <span class="badge bg-danger">Invalid</span>
-                        {% endif %}
-                    </div>
-
-                    <div class="validation-row">
-                        <span>Proof of Work</span>
-                        {% if proof_status.pow_valid %}
-                            <span class="badge bg-success">Valid</span>
-                        {% else %}
-                            <span class="badge bg-danger">Invalid</span>
-                        {% endif %}
-                    </div>
-
-                    <div class="validation-row">
-                        <span>RSA Signature</span>
-                        {% if proof_status.signature_valid %}
-                            <span class="badge bg-success">Valid</span>
-                        {% else %}
-                            <span class="badge bg-danger">Invalid</span>
-                        {% endif %}
-                    </div>
-                {% else %}
-                    <p class="text-secondary mb-0">
-                        Status validasi tidak tersedia.
-                    </p>
-                {% endif %}
-            </div>
+        <div class="validation-row">
+          <span>Block Hash</span>
+          {% if proof_status.hash_match %}
+          <span class="badge bg-success">Valid</span>
+          {% else %}
+          <span class="badge bg-danger">Invalid</span>
+          {% endif %}
         </div>
+
+        <div class="validation-row">
+          <span>Proof of Work</span>
+          {% if proof_status.pow_valid %}
+          <span class="badge bg-success">Valid</span>
+          {% else %}
+          <span class="badge bg-danger">Invalid</span>
+          {% endif %}
+        </div>
+
+        <div class="validation-row">
+          <span>RSA Signature</span>
+          {% if proof_status.signature_valid %}
+          <span class="badge bg-success">Valid</span>
+          {% else %}
+          <span class="badge bg-danger">Invalid</span>
+          {% endif %}
+        </div>
+        {% else %}
+        <p class="text-secondary mb-0">Status validasi tidak tersedia.</p>
+        {% endif %}
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}
