@@ -64,7 +64,6 @@ def sign_block_hash(private_key, block_hash: str) -> str:
 
     return base64.b64encode(signature).decode("utf-8")
 
-
 def verify_block_signature(public_key_pem: str, block_hash: str, signature_base64: str) -> bool:
     try:
         public_key = serialization.load_pem_public_key(
@@ -119,13 +118,13 @@ def validate_chain_integrity(blocks):
 
         previous_hash_valid = block["previous_hash"] == expected_previous_hash
 
-        pow_valid = block["block_hash"].startswith(
+        pow_valid = calculated_hash.startswith(
             "0" * int(block["difficulty"])
         )
 
         signature_valid = verify_block_signature(
             public_key_pem=block["public_key_pem"],
-            block_hash=block["block_hash"],
+            block_hash=calculated_hash,
             signature_base64=block["owner_signature"]
         )
 
